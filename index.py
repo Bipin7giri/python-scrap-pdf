@@ -1,21 +1,36 @@
-import tabula
-import fitz  # PyMuPDF
+from pdfquery import PDFQuery
+import json
 
-# PDF file to extract tables from
-file = "adbl.pdf"
+def extract_table(pdf, table_selector):
+    table_elements = pdf.pq(table_selector)
+    print(table_elements)
+    rows = []
+    
+    for row_element in table_elements.children('LTTextLineHorizontal'):
+        cells = [cell.text.strip() for cell in row_element.children('LTTextBoxHorizontal')]
+        rows.append(cells)
 
-# Extract text from the specific page (page number 104) using PyMuPDF
-page_number = 104
-text = ""
-with fitz.open(file) as pdf_doc:
-    page = pdf_doc[page_number - 1]  # Adjusting for 0-based indexing
-    text = page.get_text()
+    return rows
 
-# Use tabula to extract tables from the extracted text
-tables = tabula.read_pdf(file, pages=page_number)
+# def save_table_to_json(table_data, output_json_path):
+#     table_json = json.dumps(table_data, indent=2, ensure_ascii=False)
+#     with open(output_json_path, 'w', encoding='utf-8') as json_file:
+#         json_file.write(table_json)
 
-# Print and save the extracted tables
-print(tables)
-for i, table in enumerate(tables):
-    print(f"Table {i + 1}:\n", table)
-    table.to_json(f"adbl_table_{i + 1}_page_{page_number}.json", index=False)
+# Example usage     
+pdf = PDFQuery('adbl.pdf')
+pdf.load()
+print(pdf)
+# # Specify the CSS-like selector for the table
+# table_selector = 'LTPage[pageid=\'1\'] LTTable[width="400.00"]'
+
+# # Extract the table data
+# table_data = extract_table(pdf, table_selector)
+
+# # Specify the output JSON file path
+# output_json_path = 'extracted_table.json'
+
+# Save the extracted table data to a JSON file
+# save_table_to_json(table_data, output_json_path)
+
+# print(f"Extracted table saved to: {output_json_path}")
